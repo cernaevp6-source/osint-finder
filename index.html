@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2F3640">
+<title>OSINT FINDER — Telegram Mini App</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+:root{--milk:#FFFDF5;--graphite:#2F3640;--ink:#222831;--muted:#737983;--line:#d9d9d2;--panel:#f7f5ed}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--milk);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+button,input{font:inherit}button{cursor:pointer}.shell{min-height:100vh;display:grid;grid-template-columns:68px 1fr}.rail{background:var(--graphite);color:var(--milk);display:flex;flex-direction:column;align-items:center;padding:18px 8px;gap:14px;position:sticky;top:0;height:100vh}.eye{font-size:26px;margin:4px 0 24px}.nav{border:0;background:transparent;color:#e8e8e4;border-radius:10px;width:48px;height:46px;font-size:19px}.nav.active,.nav:hover{background:#454c55}.rail .bottom{margin-top:auto;font-size:10px;writing-mode:vertical-rl;opacity:.7;letter-spacing:1px}
+main{min-width:0}.top{height:62px;padding:0 24px;display:flex;align-items:center;gap:18px;border-bottom:1px solid var(--line);font-size:12px;letter-spacing:1.2px}.brand{font-weight:800;font-size:14px;white-space:nowrap}.rule{height:1px;background:#9da0a0;flex:1}.topnote{font-size:10px;text-align:right}
+.hero{min-height:370px;background:var(--graphite);color:var(--milk);position:relative;overflow:hidden;padding:42px clamp(22px,5vw,62px);display:flex;align-items:center}.hero:before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 74% 45%,#ffffff16,transparent 40%),linear-gradient(90deg,#171c21 0%,#20252b 60%,#15191e 100%)}.hero-art{position:absolute;right:-2%;top:0;width:62%;height:100%;object-fit:cover;object-position:center;opacity:.72;mix-blend-mode:screen;mask-image:linear-gradient(90deg,transparent 0%,#000 28%)}.hero-content{position:relative;z-index:1;max-width:440px}.eyebrow{font-size:10px;letter-spacing:2px;text-transform:uppercase;margin-bottom:14px}.hero h1{font-size:clamp(42px,6vw,72px);line-height:.9;letter-spacing:-2px;margin:0 0 20px;font-weight:950}.hero p{font-size:14px;line-height:1.7;color:#e1e1dd;max-width:330px}.actions{display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-top:25px}.primary,.secondary{border:0;border-radius:6px;padding:13px 17px;font-size:12px}.primary{background:var(--milk);color:var(--graphite);font-weight:750}.secondary{background:transparent;color:var(--milk);border:1px solid #777d84}
+.section{padding:30px clamp(18px,4vw,54px)}.section-head{display:flex;align-items:center;gap:18px;margin-bottom:18px}.section-head .eyebrow{margin:0;white-space:nowrap;color:#5b626c}.section-head .rule{background:#a5a8a8}.section h2{font-size:clamp(24px,3vw,34px);line-height:1;margin:0 0 22px;font-weight:900;letter-spacing:-.8px}.cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.card{border:1px solid var(--line);border-radius:5px;padding:18px 16px;min-height:166px;background:#fffdf533}.card-icon{width:42px;height:42px;border-radius:8px;background:var(--graphite);color:white;display:grid;place-items:center;font-size:21px;margin-bottom:12px}.card h3{font-size:13px;margin:0 0 8px}.card p{font-size:12px;color:#5e646c;line-height:1.65;margin:0 0 15px}.card button{border:0;background:none;padding:0;color:var(--ink);font-size:11px;font-weight:700}
+.search-panel{display:none;padding:28px clamp(18px,4vw,54px);background:#f4f2e9;border-top:1px solid var(--line)}.search-panel.show{display:block}.tabs{display:flex;gap:8px;margin:15px 0}.tab{border:1px solid #c9cbc7;background:transparent;border-radius:5px;padding:10px 13px;font-size:12px}.tab.active{background:var(--graphite);color:white;border-color:var(--graphite)}.search-row{display:flex;gap:8px}.search-row input{min-width:0;flex:1;border:1px solid #c9cbc7;background:var(--milk);border-radius:5px;padding:13px;color:var(--ink)}.hint{font-size:11px;color:var(--muted);line-height:1.6;margin:10px 0}.results{margin-top:15px;display:grid;gap:8px}.result{border:1px solid var(--line);background:var(--milk);padding:12px;border-radius:5px;font-size:12px}.result a{color:#394f68;overflow-wrap:anywhere}.footer{background:var(--graphite);color:var(--milk);padding:24px clamp(18px,4vw,54px);display:flex;justify-content:space-between;gap:18px;align-items:center;position:relative;overflow:hidden}.footer small{color:#c5c7c7;font-size:10px}.feather{font-size:42px;opacity:.35;transform:rotate(-20deg)}.notice{padding:10px 12px;background:#ebe9df;border-radius:5px;font-size:11px;color:#555b63;line-height:1.5}
+@media(max-width:800px){.shell{grid-template-columns:52px 1fr}.rail{padding:14px 4px}.nav{width:42px}.top{padding:0 14px}.topnote{display:none}.hero{min-height:360px;padding:34px 20px;align-items:flex-start}.hero-art{width:100%;right:-25%;opacity:.45;mask-image:linear-gradient(90deg,transparent 0%,#000 55%)}.hero-content{max-width:330px}.hero h1{font-size:clamp(42px,11vw,62px)}.cards{grid-template-columns:repeat(2,minmax(0,1fr))}.section{padding:26px 16px}.footer{padding:20px 16px}}
+@media(max-width:420px){.cards{grid-template-columns:1fr}.hero{min-height:390px}.hero-art{right:-50%;width:130%;opacity:.35}.search-row{flex-direction:column}.primary{width:100%}.top{gap:9px}.brand{font-size:12px}}
+</style>
+</head>
+<body>
+<div class="shell">
+<aside class="rail" aria-label="Навигация">
+<div class="eye">◎</div>
+<button class="nav active" title="Главная" data-scroll="home">⌂</button>
+<button class="nav" title="Поиск" data-search>⌕</button>
+<button class="nav" title="История" data-history>▤</button>
+<button class="nav" title="Настройки" data-settings>⚙</button>
+<div class="bottom">OPEN SOURCES ONLY</div>
+</aside>
+<main>
+<header class="top"><div class="brand">OSINT FINDER</div><div class="rule"></div><div class="topnote">БОЛЬШЕ, ЧЕМ ПРОСТО ПОИСК　 •</div></header>
+<section class="hero" id="home">
+<div class="hero-content"><div class="eyebrow">OSINT FINDER / 001</div><h1>НАЙДИ<br>БОЛЬШЕ</h1><p>Поиск по номеру телефона, @username и открытым источникам. Быстро. Удобно. Без лишних данных.</p><div class="actions"><button class="primary" data-search>⌕　Начать поиск</button><button class="secondary" id="how">Как это работает　 →</button></div></div>
+<img class="hero-art" src="assets/eyes-banner.png" alt="Монохромное изображение глаз" onerror="this.style.display='none'">
+</section>
+<section class="search-panel" id="searchPanel">
+<div class="section-head"><div class="eyebrow">ПОИСК / QUERY</div><div class="rule"></div></div><h2>Что будем искать?</h2>
+<div class="tabs"><button class="tab active" data-mode="username">@username</button><button class="tab" data-mode="phone">Номер телефона</button></div>
+<form id="searchForm"><div class="search-row"><input id="query" autocomplete="off" placeholder="Введите @username" required maxlength="120"><button class="primary" type="submit">Найти источники ↗</button></div></form>
+<p class="hint">Этот прототип формирует ссылки для поиска по публичным источникам. Он не подтверждает личность владельца номера или аккаунта.</p>
+<div class="results" id="results"></div>
+</section>
+<section class="section" id="features">
+<div class="section-head"><div class="eyebrow">ВОЗМОЖНОСТИ</div><div class="rule"></div></div><h2>Что мы можем<br>найти?</h2>
+<div class="cards">
+<article class="card"><div class="card-icon">@</div><h3>Поиск по @username</h3><p>Проверка публичных профилей, упоминаний и открытых страниц с указанным ником.</p><button data-mode-start="username">Подробнее　 →</button></article>
+<article class="card"><div class="card-icon">♧</div><h3>Поиск по номеру телефона</h3><p>Поиск публичных страниц и жалоб, где встречается введённый номер.</p><button data-mode-start="phone">Подробнее　 →</button></article>
+<article class="card"><div class="card-icon">◎</div><h3>Открытые источники</h3><p>Поисковые системы, сайты, форумы и публичные публикации.</p><button data-search>Подробнее　 →</button></article>
+<article class="card"><div class="card-icon">◇</div><h3>Проверка на мошенничество</h3><p>Поиск открытых жалоб и предупреждений. Совпадение не является доказательством.</p><button data-mode-start="phone">Подробнее　 →</button></article>
+</div>
+</section>
+<section class="section" id="historyPanel" style="display:none"><div class="section-head"><div class="eyebrow">ИСТОРИЯ</div><div class="rule"></div></div><h2>Последние запросы</h2><div id="historyList" class="results"></div><button class="tab" id="clearHistory">Очистить историю на этом устройстве</button></section>
+<section class="section" id="settingsPanel" style="display:none"><div class="section-head"><div class="eyebrow">НАСТРОЙКИ</div><div class="rule"></div></div><h2>Приватность прежде всего</h2><div class="notice">История этого прототипа хранится только в локальном хранилище браузера. Не вводите секретные или чувствительные данные. Для полноценной версии понадобятся сервер, политика обработки данных и проверенные поисковые API.</div></section>
+<footer class="footer"><div><strong>#2F3640</strong><br><small>Приватность. Безопасность. Законность.</small></div><div class="feather">〰</div><div>◎　OSINT FINDER</div></footer>
+</main></div>
+<script>
+const tg=window.Telegram?.WebApp;
+try{tg?.ready();tg?.expand();if(tg?.themeParams?.bg_color)document.documentElement.style.setProperty('--milk','#FFFDF5')}catch(e){}
+let mode='username';let historyItems=[];
+try{historyItems=JSON.parse(localStorage.getItem('osintHistory')||'[]')}catch(e){}
+const panel=document.getElementById('searchPanel'),query=document.getElementById('query');
+function openSearch(nextMode){panel.classList.add('show');if(nextMode)chooseMode(nextMode);panel.scrollIntoView({behavior:'smooth',block:'start'});setTimeout(()=>query.focus({preventScroll:true}),250)}
+function chooseMode(m){mode=m;document.querySelectorAll('.tab[data-mode]').forEach(b=>b.classList.toggle('active',b.dataset.mode===m));query.placeholder=m==='username'?'Введите @username':'Введите номер, например +49…';query.value='';document.getElementById('results').innerHTML=''}
+document.querySelectorAll('[data-search]').forEach(b=>b.addEventListener('click',()=>openSearch()));
+document.querySelectorAll('[data-mode]').forEach(b=>b.addEventListener('click',()=>chooseMode(b.dataset.mode)));
+document.querySelectorAll('[data-mode-start]').forEach(b=>b.addEventListener('click',()=>openSearch(b.dataset.modeStart)));
+document.querySelectorAll('[data-scroll]').forEach(b=>b.addEventListener('click',()=>document.getElementById(b.dataset.scroll).scrollIntoView({behavior:'smooth'})));
+document.getElementById('how').addEventListener('click',()=>alert('Введите ник или номер. Приложение создаст ссылки для поиска по открытым источникам. Совпадения нужно проверять вручную.'));
+document.querySelector('[data-history]').addEventListener('click',()=>{document.getElementById('historyPanel').style.display='block';document.getElementById('settingsPanel').style.display='none';renderHistory();document.getElementById('historyPanel').scrollIntoView({behavior:'smooth'})});
+document.querySelector('[data-settings]').addEventListener('click',()=>{document.getElementById('settingsPanel').style.display='block';document.getElementById('historyPanel').style.display='none';document.getElementById('settingsPanel').scrollIntoView({behavior:'smooth'})});
+document.getElementById('clearHistory').addEventListener('click',()=>{historyItems=[];localStorage.removeItem('osintHistory');renderHistory()});
+function addResult(title,url){const d=document.createElement('div');d.className='result';const strong=document.createElement('strong');strong.textContent=title;const br=document.createElement('br');const a=document.createElement('a');a.href=url;a.target='_blank';a.rel='noopener noreferrer';a.textContent=url;d.append(strong,br,a);document.getElementById('results').append(d)}
+document.getElementById('searchForm').addEventListener('submit',e=>{e.preventDefault();const q=query.value.trim();if(!q)return;const enc=encodeURIComponent(q);const out=document.getElementById('results');out.innerHTML='';if(mode==='username'){const clean=q.replace(/^@/,'');addResult('Google — публичные упоминания',`https://www.google.com/search?q=${encodeURIComponent('"'+clean+'"')}`);addResult('Bing — публичные страницы',`https://www.bing.com/search?q=${encodeURIComponent('"'+clean+'"')}`);addResult('GitHub — публичные профили и код',`https://github.com/search?q=${enc}&type=users`)}else{addResult('Google — точное совпадение номера',`https://www.google.com/search?q=${encodeURIComponent('"'+q+'"')}`);addResult('Bing — точное совпадение номера',`https://www.bing.com/search?q=${encodeURIComponent('"'+q+'"')}`);addResult('Поиск по публичным жалобам',`https://www.google.com/search?q=${encodeURIComponent('"'+q+'" (мошенник OR мошенничество OR scam)')}`)}addResult('Внимание','https://www.google.com/search?q='+enc);historyItems.unshift({mode,q,at:new Date().toLocaleString('ru-RU')});historyItems=historyItems.slice(0,20);try{localStorage.setItem('osintHistory',JSON.stringify(historyItems))}catch(e){}});
+function renderHistory(){const el=document.getElementById('historyList');el.innerHTML='';if(!historyItems.length){el.textContent='История пока пуста.';return}historyItems.forEach(item=>{const d=document.createElement('div');d.className='result';d.textContent=`${item.mode==='username'?'@username':'Телефон'} · ${item.q} · ${item.at}`;el.append(d)})}
+</script>
+</body></html>
