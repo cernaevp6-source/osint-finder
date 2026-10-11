@@ -37,7 +37,13 @@ main{min-width:0}.top{height:62px;padding:0 24px;display:flex;align-items:center
 <section class="search-panel" id="searchPanel">
 <div class="section-head"><div class="eyebrow">ПОИСК / QUERY</div><div class="rule"></div></div><h2>Что будем искать?</h2>
 <div class="tabs"><button class="tab active" data-mode="username">@username</button><button class="tab" data-mode="phone">Номер телефона</button></div>
-<form id="searchForm"><div class="search-row"><input id="query" autocomplete="off" placeholder="Введите @username" required maxlength="120"><button class="primary" type="submit">Найти источники ↗</button></div></form>
+<form id="searchForm"><div class="search-row"><input id="query" autocomplete="off" placeholder="Введите @username" required maxlength="120"><button class="primary" type="submit">Найти источники ↗</button></div></form><div id="imageInputWrap" style="display:none;margin-top:10px">
+  <label for="imageFile">Выберите изображение:</label>
+  <input id="imageFile" type="file" accept="image/*">
+</div>
+<p class="hint" id="modeHint">
+  Поиск по публичным источникам. Проверяйте совпадения вручную.
+</p>
 <p class="hint">Этот прототип формирует ссылки для поиска по публичным источникам. Он не подтверждает личность владельца номера или аккаунта.</p>
 <div class="results" id="results"></div>
 </section>
@@ -54,6 +60,14 @@ main{min-width:0}.top{height:62px;padding:0 24px;display:flex;align-items:center
 <section class="section" id="settingsPanel" style="display:none"><div class="section-head"><div class="eyebrow">НАСТРОЙКИ</div><div class="rule"></div></div><h2>Приватность прежде всего</h2><div class="notice">История этого прототипа хранится только в локальном хранилище браузера. Не вводите секретные или чувствительные данные. Для полноценной версии понадобятся сервер, политика обработки данных и проверенные поисковые API.</div></section>
 <footer class="footer"><div><strong>#2F3640</strong><br><small>Приватность. Безопасность. Законность.</small></div><div class="feather">〰</div><div>◎　OSINT FINDER</div></footer>
 </main></div>
+  <div class="tabs">
+  <button class="tab active" data-mode="username">@username</button>
+  <button class="tab" data-mode="email">Email</button>
+  <button class="tab" data-mode="phone">Телефон</button>
+  <button class="tab" data-mode="name">Имя</button>
+  <button class="tab" data-mode="image">Изображение</button>
+  <button class="tab" data-mode="breach">Утечки</button>
+</div>
 <script>
 const tg = window.Telegram?.WebApp;
 try {
