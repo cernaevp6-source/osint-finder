@@ -55,23 +55,286 @@ main{min-width:0}.top{height:62px;padding:0 24px;display:flex;align-items:center
 <footer class="footer"><div><strong>#2F3640</strong><br><small>Приватность. Безопасность. Законность.</small></div><div class="feather">〰</div><div>◎　OSINT FINDER</div></footer>
 </main></div>
 <script>
-const tg=window.Telegram?.WebApp;
-try{tg?.ready();tg?.expand();if(tg?.themeParams?.bg_color)document.documentElement.style.setProperty('--milk','#FFFDF5')}catch(e){}
-let mode='username';let historyItems=[];
-try{historyItems=JSON.parse(localStorage.getItem('osintHistory')||'[]')}catch(e){}
-const panel=document.getElementById('searchPanel'),query=document.getElementById('query');
-function openSearch(nextMode){panel.classList.add('show');if(nextMode)chooseMode(nextMode);panel.scrollIntoView({behavior:'smooth',block:'start'});setTimeout(()=>query.focus({preventScroll:true}),250)}
-function chooseMode(m){mode=m;document.querySelectorAll('.tab[data-mode]').forEach(b=>b.classList.toggle('active',b.dataset.mode===m));query.placeholder=m==='username'?'Введите @username':'Введите номер, например +49…';query.value='';document.getElementById('results').innerHTML=''}
-document.querySelectorAll('[data-search]').forEach(b=>b.addEventListener('click',()=>openSearch()));
-document.querySelectorAll('[data-mode]').forEach(b=>b.addEventListener('click',()=>chooseMode(b.dataset.mode)));
-document.querySelectorAll('[data-mode-start]').forEach(b=>b.addEventListener('click',()=>openSearch(b.dataset.modeStart)));
-document.querySelectorAll('[data-scroll]').forEach(b=>b.addEventListener('click',()=>document.getElementById(b.dataset.scroll).scrollIntoView({behavior:'smooth'})));
-document.getElementById('how').addEventListener('click',()=>alert('Введите ник или номер. Приложение создаст ссылки для поиска по открытым источникам. Совпадения нужно проверять вручную.'));
-document.querySelector('[data-history]').addEventListener('click',()=>{document.getElementById('historyPanel').style.display='block';document.getElementById('settingsPanel').style.display='none';renderHistory();document.getElementById('historyPanel').scrollIntoView({behavior:'smooth'})});
-document.querySelector('[data-settings]').addEventListener('click',()=>{document.getElementById('settingsPanel').style.display='block';document.getElementById('historyPanel').style.display='none';document.getElementById('settingsPanel').scrollIntoView({behavior:'smooth'})});
-document.getElementById('clearHistory').addEventListener('click',()=>{historyItems=[];localStorage.removeItem('osintHistory');renderHistory()});
-function addResult(title,url){const d=document.createElement('div');d.className='result';const strong=document.createElement('strong');strong.textContent=title;const br=document.createElement('br');const a=document.createElement('a');a.href=url;a.target='_blank';a.rel='noopener noreferrer';a.textContent=url;d.append(strong,br,a);document.getElementById('results').append(d)}
-document.getElementById('searchForm').addEventListener('submit',e=>{e.preventDefault();const q=query.value.trim();if(!q)return;const enc=encodeURIComponent(q);const out=document.getElementById('results');out.innerHTML='';if(mode==='username'){const clean=q.replace(/^@/,'');addResult('Google — публичные упоминания',`https://www.google.com/search?q=${encodeURIComponent('"'+clean+'"')}`);addResult('Bing — публичные страницы',`https://www.bing.com/search?q=${encodeURIComponent('"'+clean+'"')}`);addResult('GitHub — публичные профили и код',`https://github.com/search?q=${enc}&type=users`)}else{addResult('Google — точное совпадение номера',`https://www.google.com/search?q=${encodeURIComponent('"'+q+'"')}`);addResult('Bing — точное совпадение номера',`https://www.bing.com/search?q=${encodeURIComponent('"'+q+'"')}`);addResult('Поиск по публичным жалобам',`https://www.google.com/search?q=${encodeURIComponent('"'+q+'" (мошенник OR мошенничество OR scam)')}`)}addResult('Внимание','https://www.google.com/search?q='+enc);historyItems.unshift({mode,q,at:new Date().toLocaleString('ru-RU')});historyItems=historyItems.slice(0,20);try{localStorage.setItem('osintHistory',JSON.stringify(historyItems))}catch(e){}});
-function renderHistory(){const el=document.getElementById('historyList');el.innerHTML='';if(!historyItems.length){el.textContent='История пока пуста.';return}historyItems.forEach(item=>{const d=document.createElement('div');d.className='result';d.textContent=`${item.mode==='username'?'@username':'Телефон'} · ${item.q} · ${item.at}`;el.append(d)})}
+const tg = window.Telegram?.WebApp;
+try {
+  tg?.ready();
+  tg?.expand();
+} catch (e) {}
+
+let mode = "username";
+let historyItems = [];
+
+try {
+  const saved = JSON.parse(localStorage.getItem("osintHistory") || "[]");
+  historyItems = Array.isArray(saved) ? saved : [];
+} catch (e) {}
+
+const panel = document.getElementById("searchPanel");
+const query = document.getElementById("query");
+const results = document.getElementById("results");
+
+const modeNames = {
+  username: "Username",
+  email: "Email",
+  phone: "Телефон",
+  name: "Имя",
+  image: "Изображение",
+  breach: "Утечки"
+};
+
+const placeholders = {
+  username: "Введите @username",
+  email: "Введите email",
+  phone: "Введите номер, например +49…",
+  name: "Введите имя и фамилию",
+  image: "Поиск по изображению",
+  breach: "Введите email для проверки утечек"
+};
+
+function openSearch(nextMode) {
+  panel.classList.add("show");
+  if (nextMode) chooseMode(nextMode);
+  panel.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function chooseMode(nextMode) {
+  mode = nextMode;
+
+  document.querySelectorAll("[data-mode]").forEach(button => {
+    button.classList.toggle("active", button.dataset.mode === mode);
+  });
+
+  query.placeholder = placeholders[mode];
+  query.value = "";
+  query.required = mode !== "image";
+  query.style.display = mode === "image" ? "none" : "block";
+
+  const imageWrap = document.getElementById("imageInputWrap");
+  if (imageWrap) {
+    imageWrap.style.display = mode === "image" ? "block" : "none";
+  }
+
+  results.replaceChildren();
+
+  const hints = {
+    username: "Ищем публичные упоминания и профили. Совпадение никнейма не подтверждает личность.",
+    email: "Поиск публичных упоминаний. Проверка известных утечек выполняется отдельно.",
+    phone: "Поиск публичных упоминаний номера. Результаты могут быть неточными.",
+    name: "Одно и то же имя может принадлежать разным людям.",
+    image: "Файл не загружается этим сайтом. Вы можете самостоятельно открыть внешний сервис.",
+    breach: "API проверки утечек не подключён. Используйте официальный сервис."
+  };
+
+  const hint = document.getElementById("modeHint");
+  if (hint) hint.textContent = hints[mode];
+}
+
+document.querySelectorAll("[data-search]").forEach(button =>
+  button.addEventListener("click", () => openSearch())
+);
+
+document.querySelectorAll("[data-mode]").forEach(button =>
+  button.addEventListener("click", () => chooseMode(button.dataset.mode))
+);
+
+document.querySelectorAll("[data-mode-start]").forEach(button =>
+  button.addEventListener("click", () => openSearch(button.dataset.modeStart))
+);
+
+document.querySelectorAll("[data-scroll]").forEach(button =>
+  button.addEventListener("click", () => {
+    document.getElementById(button.dataset.scroll)
+      ?.scrollIntoView({ behavior: "smooth" });
+  })
+);
+
+document.getElementById("how")?.addEventListener("click", () => {
+  alert("Выберите тип запроса. OSINT Finder сформирует ссылки на публичные источники. Он не подтверждает личность и не подключён к закрытым базам.");
+});
+
+document.querySelector("[data-history]")?.addEventListener("click", () => {
+  document.getElementById("historyPanel").style.display = "block";
+  document.getElementById("settingsPanel").style.display = "none";
+  renderHistory();
+  document.getElementById("historyPanel")
+    .scrollIntoView({ behavior: "smooth" });
+});
+
+document.querySelector("[data-settings]")?.addEventListener("click", () => {
+  document.getElementById("settingsPanel").style.display = "block";
+  document.getElementById("historyPanel").style.display = "none";
+  document.getElementById("settingsPanel")
+    .scrollIntoView({ behavior: "smooth" });
+});
+
+document.getElementById("clearHistory")?.addEventListener("click", () => {
+  historyItems = [];
+  try {
+    localStorage.removeItem("osintHistory");
+  } catch (e) {}
+  renderHistory();
+});
+
+function addResult(title, url, description = "Внешний источник; результаты нужно проверить.") {
+  const item = document.createElement("div");
+  item.className = "result";
+
+  const heading = document.createElement("strong");
+  heading.textContent = title;
+  const text = document.createElement("p");
+  text.textContent = description;
+
+  const link = document.createElement("a");
+  link.href = url;
+  link.target = "_blank";
+  link.rel = "noopener noreferrer";
+  link.textContent = url;
+
+  item.append(heading, text, link);
+  results.append(item);
+}
+
+function googleSearch(text) {
+  return "https://www.google.com/search?q=" + encodeURIComponent(text);
+}
+
+function bingSearch(text) {
+  return "https://www.bing.com/search?q=" + encodeURIComponent(text);
+}
+
+function saveHistory(value) {
+  historyItems.unshift({
+    mode,
+    q: value,
+    at: new Date().toLocaleString("ru-RU")
+  });
+
+  historyItems = historyItems.slice(0, 20);
+
+  try {
+    localStorage.setItem("osintHistory", JSON.stringify(historyItems));
+  } catch (e) {}
+}
+
+document.getElementById("searchForm").addEventListener("submit", event => {
+  event.preventDefault();
+  results.replaceChildren();
+
+  const value = query.value.trim();
+
+  if (mode === "image") {
+    const file = document.getElementById("imageFile")?.files?.[0];
+
+    if (!file) {
+      addResult("Сначала выберите изображение", "https://images.google.com/");
+      return;
+    }
+
+    addResult(
+      "Google Images",
+      "https://images.google.com/",
+      "Откройте сервис и самостоятельно выберите изображение."
+    );
+    addResult(
+      "Bing Visual Search",
+      "https://www.bing.com/visualsearch",
+      "Загрузите файл непосредственно в выбранный сервис, предварительно проверив его условия."
+    );
+
+    saveHistory("Файл: " + file.name);
+    return;
+  }
+
+  if (!value) {
+    query.focus();
+    return;
+  }
+
+  if (mode === "email" &&
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+    addResult("Проверьте формат email", "https://support.google.com/mail/");
+    return;
+  }
+
+  if (mode === "phone" &&
+      !/^[+()\d\s.-]{6,30}$/.test(value)) {
+    addResult("Проверьте формат номера", "https://www.google.com/");
+    return;
+  }
+
+  if (mode === "username") {
+    const username = value.replace(/^@/, "");
+
+    addResult("Google — публичные упоминания",
+      googleSearch('"' + username + '"'));
+    addResult("Bing — публичные страницы",
+      bingSearch('"' + username + '"'));
+    addResult("GitHub — публичные профили",
+      "https://github.com/search?q=" +
+      encodeURIComponent(username) + "&type=users");
+  }
+
+  if (mode === "email") {
+    addResult("Google — публичные упоминания",
+      googleSearch('"' + value + '"'));
+    addResult("Bing — публичные упоминания",
+      bingSearch('"' + value + '"'));
+    addResult("Have I Been Pwned",
+      "https://haveibeenpwned.com/",
+      "Официальный сервис проверки известных утечек. API в этом приложении пока не подключён.");
+  }
+
+  if (mode === "phone") {
+    addResult("Google — точный поиск номера",
+      googleSearch('"' + value + '"'));
+    addResult("Bing — точный поиск номера",
+      bingSearch('"' + value + '"'));
+    addResult("Публичные предупреждения",
+      googleSearch('"' + value + '" (мошенничество OR scam)'));
+  }
+
+  if (mode === "name") {
+    addResult("Google — поиск имени",
+      googleSearch('"' + value + '"'));
+    addResult("Bing — поиск имени",
+      bingSearch('"' + value + '"'));
+  }
+
+  if (mode === "breach") {
+    addResult("Have I Been Pwned",
+      "https://haveibeenpwned.com/",
+      "Откройте официальный сервис и проверьте адрес согласно его условиям. Прямая интеграция с API не настроена.");
+    addResult("Mozilla Monitor",
+      "https://monitor.mozilla.org/",
+      "Дополнительный сервис проверки известных утечек.");
+  }
+
+  addResult("Важно",
+    "https://www.google.com/",
+    "Это ссылки на поиск, а не подтверждённые находки. Проверяйте первоисточник и не считайте совпадение доказательством.");
+
+  saveHistory(value);
+});
+
+function renderHistory() {
+  const list = document.getElementById("historyList");
+  list.replaceChildren();
+
+  if (!historyItems.length) {
+    list.textContent = "История пока пуста.";
+    return;
+  }
+  historyItems.forEach(item => {
+    const row = document.createElement("div");
+    row.className = "result";
+    row.textContent =
+      (modeNames[item.mode] || item.mode) +
+      " · " + item.q + " · " + item.at;
+    list.append(row);
+  });
+}
+
+chooseMode("username");
 </script>
-</body></html>
+</body>
+</html>
